@@ -190,7 +190,7 @@ function ensureStatsApiConfig(file) {
 }
 
 function updateStatsApiIni(content) {
-  const newline = content.includes("\r\n") ? "\r\n" : os.EOL;
+  const newline = content.includes("\r\n") ? "\r\n" : content.includes("\n") ? "\n" : os.EOL;
   const normalized = String(content || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   const hadTrailingNewline = normalized.endsWith("\n");
   const lines = normalized.length ? normalized.replace(/\n$/, "").split("\n") : [];
