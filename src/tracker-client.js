@@ -19,7 +19,7 @@ class TrackerClient {
       return {
         status: "unavailable",
         playlistId: playlist ? playlist.id : null,
-        playlistName: playlist ? playlist.label : "Mode inconnu",
+        playlistName: playlist ? playlist.label : "Unknown mode",
         playlistShort: playlist ? playlist.short : "MMR",
         rating: null,
         tier: "",
@@ -30,7 +30,7 @@ class TrackerClient {
     }
 
     try {
-      this.log("info", "Tracker lookup demarre", {
+      this.log("info", "Tracker lookup started", {
         playlist: playlist.label,
         platform: profileTarget.slug,
         targetSource: profileTarget.targetSource,
@@ -42,7 +42,7 @@ class TrackerClient {
       const rank = profile.playlists[playlist.id];
 
       if (!rank) {
-        this.log("warn", "Tracker playlist absente du profil", {
+        this.log("warn", "Tracker playlist missing from profile", {
           playlist: playlist.label,
           platform: profileTarget.slug,
           targetUsed: profile.lookup.targetUsed,
@@ -62,7 +62,7 @@ class TrackerClient {
         };
       }
 
-      this.log("info", "Tracker profil valide", {
+      this.log("info", "Tracker profile validated", {
         playlist: playlist.label,
         platform: profileTarget.slug,
         targetUsed: profile.lookup.targetUsed,
@@ -88,7 +88,7 @@ class TrackerClient {
         updatedAt: profile.updatedAt
       };
     } catch (error) {
-      this.log("warn", "Tracker lookup echec", {
+      this.log("warn", "Tracker lookup failed", {
         playlist: playlist.label,
         platform: profileTarget.slug,
         targetSource: profileTarget.targetSource,
@@ -118,7 +118,7 @@ class TrackerClient {
     // forceRefresh bypasses cached values/errors but still reuses an in-flight
     // request to avoid duplicate concurrent hits on the tracker API.
     if (cached && cached.expiresAt > now && (!forceRefresh || cached.promise)) {
-      this.log("info", "Tracker cache utilise", {
+      this.log("info", "Tracker cache used", {
         platform: profileTarget.slug,
         targetSource: profileTarget.targetSource,
         target: profileTarget.target,
@@ -195,7 +195,7 @@ function fetchTrackerProfile(profileTarget, log = () => {}) {
   const encodedTarget = encodeURIComponent(profileTarget.target);
   const url = `https://api.tracker.gg/api/v2/rocket-league/standard/profile/${profileTarget.slug}/${encodedTarget}`;
 
-  log("info", "Tracker requete profil", {
+  log("info", "Tracker profile request", {
     platform: profileTarget.slug,
     targetSource: profileTarget.targetSource,
     target: profileTarget.target
@@ -207,7 +207,7 @@ function fetchTrackerProfile(profileTarget, log = () => {}) {
   })).catch((error) => {
     if (error && error.statusCode === 404 && profileTarget.slug === "epic" && profileTarget.fallbackTarget) {
       const fallbackUrl = `https://api.tracker.gg/api/v2/rocket-league/standard/profile/${profileTarget.slug}/${encodeURIComponent(profileTarget.fallbackTarget)}`;
-      log("warn", "Tracker Epic ID introuvable, fallback pseudo", {
+      log("warn", "Tracker Epic ID not found, falling back to username", {
         target: profileTarget.target,
         fallbackTarget: profileTarget.fallbackTarget
       });
@@ -221,7 +221,7 @@ function fetchTrackerProfile(profileTarget, log = () => {}) {
     const data = payload && payload.data;
     if (!data || typeof data !== "object") throw new Error("Tracker profile missing data");
     const verification = verifyTrackerProfileTarget(profileTarget, data.platformInfo);
-    log("info", "Tracker profil id verifie", {
+    log("info", "Tracker profile id verified", {
       platform: profileTarget.slug,
       targetUsed,
       expectedPlatformUserId: verification.expected || null,
@@ -304,13 +304,13 @@ function requestJsonViaCurl(url) {
   return new Promise((resolve, reject) => {
     execFile(binary, args, { maxBuffer: 4 * 1024 * 1024, windowsHide: true }, (error, stdout) => {
       if (error && (error.code === "ENOENT" || /not recognized|introuvable/i.test(String(error.message)))) {
-        const missing = new Error("curl introuvable");
+        const missing = new Error("curl not found");
         missing.curlMissing = true;
         reject(missing);
         return;
       }
       if (error && !stdout) {
-        reject(new Error(`Tracker curl erreur: ${error.message || error}`));
+        reject(new Error(`Tracker curl error: ${error.message || error}`));
         return;
       }
 
@@ -320,7 +320,7 @@ function requestJsonViaCurl(url) {
       const body = output.slice(0, splitAt);
 
       if (!Number.isFinite(statusCode) || statusCode === 0) {
-        reject(new Error("Tracker curl: reponse illisible"));
+        reject(new Error("Tracker curl: unreadable response"));
         return;
       }
       if (statusCode < 200 || statusCode >= 300) {
@@ -333,7 +333,7 @@ function requestJsonViaCurl(url) {
       try {
         resolve(JSON.parse(body));
       } catch {
-        reject(new Error("Tracker curl: JSON invalide"));
+        reject(new Error("Tracker curl: invalid JSON"));
       }
     });
   });
@@ -341,7 +341,7 @@ function requestJsonViaCurl(url) {
 
 async function requestJsonViaFetch(url) {
   if (typeof fetch !== "function") {
-    throw new Error("Node.js fetch indisponible");
+    throw new Error("Node.js fetch unavailable");
   }
 
   const controller = new AbortController();

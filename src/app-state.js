@@ -55,7 +55,7 @@ function createEmptyMatchState() {
     playlist: {
       id: null,
       short: "MMR",
-      label: "Mode inconnu",
+      label: "Unknown mode",
       source: "unknown",
       confidence: "unknown"
     },
@@ -72,7 +72,7 @@ function createEmptyRankState(overrides = {}) {
     status: "idle",
     signature: "",
     playlistId: null,
-    playlistName: "Mode inconnu",
+    playlistName: "Unknown mode",
     playlistShort: "MMR",
     rating: null,
     tier: "",
@@ -118,7 +118,7 @@ class AppState extends EventEmitter {
     this.rankRatingBeforeRefresh = null;
 
     if (!this.config.keepSessionBetweenLaunches) {
-      this.log("info", "Session reset au lancement", {
+      this.log("info", "Session reset on launch", {
         keepSessionBetweenLaunches: false
       });
     }
@@ -182,7 +182,7 @@ class AppState extends EventEmitter {
     if (this.config.manualTeamNum !== null) this.latestState.playerTeamNum = this.config.manualTeamNum;
 
     writeJson(this.paths.configPath, this.config);
-    this.log("info", "Configuration sauvegardee", {
+    this.log("info", "Configuration saved", {
       statsApiUrl: this.config.statsApiUrl,
       playerName: this.config.playerName || null,
       primaryId: this.config.primaryId || null,
@@ -271,7 +271,7 @@ class AppState extends EventEmitter {
     try {
       message = asObject(JSON.parse(String(raw)));
     } catch {
-      this.log("warn", "Message Stats API ignore: JSON invalide");
+      this.log("warn", "Stats API message ignored: invalid JSON");
       return;
     }
 
@@ -328,7 +328,7 @@ class AppState extends EventEmitter {
       };
     }
 
-    this.log("info", `${eventName} recu`, {
+    this.log("info", `${eventName} received`, {
       matchGuid: matchGuid || null,
       resultEligible: this.latestState.resultEligible
     });
@@ -370,7 +370,7 @@ class AppState extends EventEmitter {
 
     if (isEmptyState && now - this.lastEmptyUpdateStateDetailLogAt > 60000) {
       this.lastEmptyUpdateStateDetailLogAt = now;
-      this.log("warn", "UpdateState vide: detail payload", {
+      this.log("warn", "Empty UpdateState: payload detail", {
         dataKeys: Object.keys(data || {}),
         gameKeys: game ? Object.keys(game) : [],
         preview: safePreview(data)
@@ -468,7 +468,7 @@ class AppState extends EventEmitter {
       const winnerSignature = `${matchGuid || "no-guid"}|${winnerTeamNum}`;
       if (winnerSignature !== this.lastWinnerSignature) {
         this.lastWinnerSignature = winnerSignature;
-        this.log("info", "Winner detecte", {
+        this.log("info", "Winner detected", {
           winnerTeamNum,
           winner: winnerTeamNum === 0 ? "Blue" : "Orange"
         });
@@ -481,12 +481,12 @@ class AppState extends EventEmitter {
 
     if (!this.config.playerName && !this.config.primaryId && !player && !hasKnownPlayer && playlistGuessReady && players.length > 0 && manualTeamNum === null && !this.missingPlayerConfigLogged) {
       this.missingPlayerConfigLogged = true;
-      this.log("warn", "Auto-detection impossible pour l'instant: aucun joueur/cible dans UpdateState. Mets ton pseudo ou une equipe manuelle dans le panneau.");
+      this.log("warn", "Auto-detection not possible yet: no player/target in UpdateState. Set your username or a manual team in the panel.");
     }
 
     if ((this.config.playerName || this.config.primaryId) && !player && manualTeamNum === null && !this.playerNotFoundLogged) {
       this.playerNotFoundLogged = true;
-      this.log("warn", "Aucun joueur ne correspond a ta config dans UpdateState", {
+      this.log("warn", "No player matches your config in UpdateState", {
         configuredName: this.config.playerName || null,
         configuredPrimaryId: this.config.primaryId || null,
         seenPlayers: players.map((item) => ({ name: item.Name, primaryId: item.PrimaryId, teamNum: item.TeamNum })).slice(0, 12)
@@ -500,7 +500,7 @@ class AppState extends EventEmitter {
       const signature = `${player.Name}|${player.PrimaryId || ""}|${player.TeamNum}`;
       if (signature !== this.lastDetectedPlayerSignature) {
         this.lastDetectedPlayerSignature = signature;
-        this.log("info", "Joueur detecte", {
+        this.log("info", "Player detected", {
           name: player.Name,
           primaryId: player.PrimaryId || null,
           teamNum: player.TeamNum,
@@ -514,7 +514,7 @@ class AppState extends EventEmitter {
       const signature = `manual|${manualTeamNum}`;
       if (signature !== this.lastManualTeamSignature) {
         this.lastManualTeamSignature = signature;
-        this.log("info", "Equipe manuelle utilisee", {
+        this.log("info", "Manual team used", {
           teamNum: manualTeamNum,
           team: manualTeamNum === 0 ? "Blue" : "Orange"
         });
@@ -528,7 +528,7 @@ class AppState extends EventEmitter {
 
     this.lastPlaylistSignature = signature;
     const isPending = playlist.source === "waiting-for-start";
-    this.log(isPending || playlist.id !== null ? "info" : "warn", isPending ? "Mode MMR en attente" : playlist.id === null ? "Mode MMR inconnu" : "Mode MMR detecte", {
+    this.log(isPending || playlist.id !== null ? "info" : "warn", isPending ? "MMR mode pending" : playlist.id === null ? "MMR mode unknown" : "MMR mode detected", {
       playlistId: playlist.id,
       playlist: playlist.label,
       source: playlist.source,
@@ -715,7 +715,7 @@ class AppState extends EventEmitter {
     const matchGuid = getField(data, "MatchGuid") || this.latestState.matchGuid || "";
     const winnerTeamNum = inferWinnerTeamNum(data, game) ?? this.latestState.winnerTeamNum;
 
-    this.log("info", "MatchEnded recu", {
+    this.log("info", "MatchEnded received", {
       matchGuid: matchGuid || null,
       winnerTeamNum,
       playerTeamNum: this.latestState.playerTeamNum,
@@ -723,7 +723,7 @@ class AppState extends EventEmitter {
     });
 
     if (!Number.isInteger(winnerTeamNum) || this.latestState.playerTeamNum === null) {
-      this.log("warn", "Impossible de calculer WIN/LOSE: winner ou equipe joueur inconnus", {
+      this.log("warn", "Cannot compute WIN/LOSE: winner or player team unknown", {
         winnerTeamNum,
         playerTeamNum: this.latestState.playerTeamNum,
         playerName: this.config.playerName || null,
@@ -743,7 +743,7 @@ class AppState extends EventEmitter {
 
   handleMatchDestroyed() {
     const fallback = this.inferDestroyedMatchResult();
-    this.log("info", "MatchDestroyed recu", {
+    this.log("info", "MatchDestroyed received", {
       matchGuid: this.latestState.matchGuid || null,
       playerTeamNum: this.latestState.playerTeamNum,
       score: `${this.getTeamScore(0)}-${this.getTeamScore(1)}`,
@@ -753,7 +753,7 @@ class AppState extends EventEmitter {
     if (fallback.ok) {
       const fallbackKey = this.getProcessedMatchKey(fallback.matchGuid, fallback.winnerTeamNum);
       if (!this.processedMatchEnds.has(fallbackKey)) {
-        this.log("info", "Resultat deduit sur MatchDestroyed", {
+        this.log("info", "Result inferred from MatchDestroyed", {
           matchGuid: fallback.matchGuid,
           winnerTeamNum: fallback.winnerTeamNum,
           playerTeamNum: this.latestState.playerTeamNum,
@@ -809,7 +809,7 @@ class AppState extends EventEmitter {
 
   recordResolvedResult(matchGuid, winnerTeamNum, source, sourceData = {}) {
     if (!this.latestState.resultEligible) {
-      this.log("warn", "Resultat ignore: match deja termine avant le lancement de l'overlay", {
+      this.log("warn", "Result ignored: match already finished before the overlay started", {
         matchGuid: matchGuid || null,
         winnerTeamNum,
         source
@@ -819,7 +819,7 @@ class AppState extends EventEmitter {
 
     const key = this.getProcessedMatchKey(matchGuid, winnerTeamNum);
     if (this.processedMatchEnds.has(key)) {
-      this.log("info", "Resultat deja traite, ignore", { matchGuid: matchGuid || null, winnerTeamNum, source });
+      this.log("info", "Result already processed, ignored", { matchGuid: matchGuid || null, winnerTeamNum, source });
       return false;
     }
 
@@ -863,7 +863,7 @@ class AppState extends EventEmitter {
     this.session.lastResult = historyItem;
     this.session.history = [historyItem, ...this.session.history].slice(0, 30);
     writeJson(this.paths.sessionPath, this.session);
-    this.log("info", result === "win" ? "Resultat WIN enregistre" : "Resultat LOSE enregistre", historyItem);
+    this.log("info", result === "win" ? "WIN result recorded" : "LOSE result recorded", historyItem);
 
     this.emit("result", {
       result,
@@ -885,7 +885,7 @@ class AppState extends EventEmitter {
     this.recomputeStreakFromHistory();
     this.session.lastResult = this.session.history[0] || null;
     writeJson(this.paths.sessionPath, this.session);
-    this.log("info", "Dernier resultat annule", last);
+    this.log("info", "Last result undone", last);
     this.emitState();
   }
 

@@ -48,7 +48,7 @@ appState.setStatsStatusProvider(() => statsClient.status());
 appState.on("state", () => scheduleLobbyRefresh());
 appState.on("rankLookup", (request) => {
   fetchRank(request).catch((error) => {
-    appState.log("warn", "Tracker MMR erreur inattendue", {
+    appState.log("warn", "Unexpected Tracker MMR error", {
       error: error && error.message ? error.message : String(error)
     });
   });
@@ -116,7 +116,7 @@ const API_ROUTES = {
 };
 
 server.listen(appState.config.serverPort, "0.0.0.0", () => {
-  appState.log("info", "Serveur overlay demarre", {
+  appState.log("info", "Overlay server started", {
     overlay: `http://localhost:${appState.config.serverPort}/overlay.html`,
     control: `http://localhost:${appState.config.serverPort}/control.html`,
     statsApiUrl: appState.config.statsApiUrl
@@ -166,7 +166,7 @@ async function handleApi(req, res, url) {
   } catch (error) {
     const statusCode = error.statusCode || 500;
     if (statusCode >= 500) {
-      appState.log("error", "Erreur API", {
+      appState.log("error", "API error", {
         path: url.pathname,
         error: error && error.message ? error.message : String(error)
       });
@@ -205,7 +205,7 @@ async function fetchRank(request) {
     });
     const applied = appState.applyRankResult(request.signature, rank);
     if (applied) {
-      appState.log(rank.status === "ready" ? "info" : "warn", rank.status === "ready" ? "MMR Tracker recu" : "MMR Tracker indisponible", {
+      appState.log(rank.status === "ready" ? "info" : "warn", rank.status === "ready" ? "Tracker MMR received" : "Tracker MMR unavailable", {
         playlist: rank.playlistName,
         rating: rank.rating,
         tier: rank.tier || null,
@@ -258,7 +258,7 @@ function scheduleLobbyRefresh() {
   clearTimeout(lobbyRefreshTimer);
   lobbyRefreshTimer = setTimeout(() => {
     maybeRefreshLobby().catch((error) => {
-      appState.log("warn", "Lobby refresh erreur inattendue", {
+      appState.log("warn", "Unexpected lobby refresh error", {
         error: error && error.message ? error.message : String(error)
       });
     });
@@ -327,8 +327,8 @@ async function maybeRefreshLobby() {
   lobbySignature = signature;
 
   if (added) {
-    appState.log("info", "Lobby mis a jour", {
-      players: lobby.players.map((entry) => entry.name + (entry.left ? " (parti)" : "")),
+    appState.log("info", "Lobby updated", {
+      players: lobby.players.map((entry) => entry.name + (entry.left ? " (left)" : "")),
       playlist: lobby.playlistShort
     });
   }
@@ -418,10 +418,10 @@ function readBody(req) {
         settled = true;
         resolve(parsed);
       } catch {
-        fail("JSON invalide", 400);
+        fail("Invalid JSON", 400);
       }
     });
-    req.on("error", (error) => fail(error.message || "Erreur lecture requete", 400));
+    req.on("error", (error) => fail(error.message || "Request read error", 400));
   });
 }
 

@@ -49,7 +49,7 @@ function bindActions() {
   bindPost("clearLogs", "/api/logs/clear");
 
   document.getElementById("resetSession").addEventListener("click", () => {
-    if (window.confirm("Reset la session win/loss ?")) post("/api/reset");
+    if (window.confirm("Reset the win/loss session?")) post("/api/reset");
   });
 
   el.configForm.addEventListener("submit", async (event) => {
@@ -92,7 +92,7 @@ async function post(url, body = {}) {
       prependLog({
         at: new Date().toISOString(),
         level: "error",
-        message: payload.error || "Erreur API",
+        message: payload.error || "API error",
         details: { url, status: response.status }
       });
       return null;
@@ -104,7 +104,7 @@ async function post(url, body = {}) {
     prependLog({
       at: new Date().toISOString(),
       level: "error",
-      message: "Dashboard deconnecte du serveur",
+      message: "Dashboard disconnected from server",
       details: { url, error: error && error.message ? error.message : String(error) }
     });
     return null;
@@ -196,25 +196,25 @@ function createDemoState() {
       {
         at: new Date(now - 8000).toISOString(),
         level: "info",
-        message: "MMR Tracker recu",
+        message: "Tracker MMR received",
         details: { playlist: "Ranked Standard 3v3", rating: 1245, tier: "Champion II" }
       },
       {
         at: new Date(now - 13000).toISOString(),
         level: "info",
-        message: "Mode MMR detecte",
+        message: "MMR mode detected",
         details: { playlist: "Ranked Standard 3v3", source: "player-count" }
       },
       {
         at: new Date(now - 17000).toISOString(),
         level: "info",
-        message: "Joueur detecte",
+        message: "Player detected",
         details: { name: "PlayerOne", teamNum: 1, source: "auto" }
       },
       {
         at: new Date(now - 22000).toISOString(),
         level: "info",
-        message: "Stats API connectee en TCP",
+        message: "Stats API connected over TCP",
         details: { host: "127.0.0.1", port: 49123 }
       }
     ]
@@ -260,7 +260,7 @@ function setConnectionPill(status) {
 
 function renderHistory(history) {
   if (!history.length) {
-    el.historyList.innerHTML = '<div class="empty-state">Aucun match enregistre.</div>';
+    el.historyList.innerHTML = '<div class="empty-state">No matches recorded yet.</div>';
     return;
   }
 
@@ -280,7 +280,7 @@ function renderHistory(history) {
 
 function renderLogs(logs) {
   if (!logs.length) {
-    el.logList.innerHTML = '<div class="empty-state">Aucun log pour le moment.</div>';
+    el.logList.innerHTML = '<div class="empty-state">No logs yet.</div>';
     return;
   }
 
@@ -323,16 +323,16 @@ function parseSocketMessage(raw) {
 function renderLobby(lobby) {
   if (!lobby || !Array.isArray(lobby.players) || !lobby.players.length) {
     el.lobbyMeta.textContent = "";
-    el.lobbyList.innerHTML = '<div class="empty-state">Aucun lobby detecte. Les joueurs apparaissent au debut du match.</div>';
+    el.lobbyList.innerHTML = '<div class="empty-state">No lobby detected. Players appear at the start of a match.</div>';
     return;
   }
 
-  el.lobbyMeta.textContent = `${lobby.playlistShort || ""} - ${lobby.players.length} joueurs`;
+  el.lobbyMeta.textContent = `${lobby.playlistShort || ""} - ${lobby.players.length} players`;
 
   const teams = [
     { teamNum: 0, label: "Blue", players: [] },
     { teamNum: 1, label: "Orange", players: [] },
-    { teamNum: null, label: "Autres", players: [] }
+    { teamNum: null, label: "Others", players: [] }
   ];
 
   for (const player of lobby.players) {
@@ -358,7 +358,7 @@ function renderLobbyPlayer(player) {
 
   return `
     <div class="lobby-player ${player.isSelf ? "self" : ""}${player.left ? " left" : ""}">
-      <span class="lobby-name">${name}${player.isSelf ? " (toi)" : ""}${player.left ? " (parti)" : ""}</span>
+      <span class="lobby-name">${name}${player.isSelf ? " (you)" : ""}${player.left ? " (left)" : ""}</span>
       <span class="lobby-mmr">${escapeHtml(formatLobbyRating(rank))}</span>
       <span class="lobby-tier">${escapeHtml(formatLobbyTier(rank))}</span>
     </div>

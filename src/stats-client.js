@@ -52,7 +52,7 @@ class StatsClient {
       endpoint = this.getEndpoint();
     } catch (error) {
       this.connection = "error";
-      this.log("error", "Endpoint Stats API invalide", { url: this.getUrl(), error: error.message });
+      this.log("error", "Invalid Stats API endpoint", { url: this.getUrl(), error: error.message });
       this.emitState();
       this.scheduleReconnect();
       return;
@@ -62,7 +62,7 @@ class StatsClient {
     this.connectionMode = "tcp";
     this.packetCount = 0;
     this.rawStream.reset();
-    this.log("info", "Connexion Stats API TCP en cours", endpoint);
+    this.log("info", "Connecting to Stats API over TCP", endpoint);
     this.emitState();
 
     const socket = net.createConnection(endpoint);
@@ -75,7 +75,7 @@ class StatsClient {
       this.reconnectDelayMs = 1000;
       this.connection = "connected";
       this.connectionMode = "tcp";
-      this.log("info", "Stats API connectee en TCP", endpoint);
+      this.log("info", "Stats API connected over TCP", endpoint);
       this.emitState();
       this.scheduleNoMessageWarning();
     });
@@ -85,7 +85,7 @@ class StatsClient {
       const { messages, overflow } = this.rawStream.push(chunk);
       for (const message of messages) this.handleMessage(message);
       if (overflow) {
-        this.log("warn", "Buffer TCP vide car aucun JSON complet n'a ete trouve", overflow);
+        this.log("warn", "TCP buffer flushed: no complete JSON found", overflow);
       }
     });
 
@@ -93,7 +93,7 @@ class StatsClient {
       if (socket !== this.socket) return;
       clearTimeout(this.noMessageTimer);
       this.connection = "disconnected";
-      this.log("warn", "Stats API TCP deconnectee", { nextRetryMs: this.reconnectDelayMs });
+      this.log("warn", "Stats API TCP disconnected", { nextRetryMs: this.reconnectDelayMs });
       this.emitState();
       this.scheduleReconnect();
     });
@@ -101,12 +101,12 @@ class StatsClient {
     socket.on("error", (error) => {
       if (socket !== this.socket) return;
       this.connection = "error";
-      this.log("error", "Erreur Stats API TCP", {
+      this.log("error", "Stats API TCP error", {
         endpoint,
         error: error && error.message ? error.message : String(error)
       });
       if (error && String(error.message || error).includes("ECONNREFUSED")) {
-        this.log("warn", "Port Stats API ferme: Rocket League n'ecoute pas encore. Verifie DefaultStatsAPI.ini puis redemarre completement le jeu.", endpoint);
+        this.log("warn", "Stats API port closed: Rocket League is not listening yet. Check DefaultStatsAPI.ini then fully restart the game.", endpoint);
       }
       this.emitState();
     });
@@ -137,14 +137,14 @@ class StatsClient {
     clearTimeout(this.noMessageTimer);
     this.noMessageTimer = setTimeout(() => {
       if (this.connection !== "connected" || this.packetCount > 0) return;
-      this.log("warn", "Connecte a la Stats API mais aucun paquet recu. Va dans un match ou attends le kickoff; la doc indique que les donnees sont emises pendant un match.");
+      this.log("warn", "Connected to the Stats API but no packets received. Join a match or wait for kickoff; data is only emitted during a match.");
     }, 12000);
   }
 
   scheduleReconnect() {
     clearTimeout(this.reconnectTimer);
     const waitMs = this.reconnectDelayMs;
-    this.log("info", "Reconnexion programmee", { waitMs });
+    this.log("info", "Reconnect scheduled", { waitMs });
     this.reconnectTimer = setTimeout(() => this.connect(), waitMs);
     this.reconnectDelayMs = Math.min(this.reconnectDelayMs * 1.6, 10000);
   }
@@ -154,14 +154,14 @@ class StatsClient {
     try {
       endpoint = this.getEndpoint();
     } catch (error) {
-      this.log("error", "Test connexion impossible: URL Stats API invalide", {
+      this.log("error", "Connection test impossible: invalid Stats API URL", {
         url: this.getUrl(),
         error: error.message
       });
       return;
     }
 
-    this.log("info", "Test connexion demarre", {
+    this.log("info", "Connection test started", {
       url: this.getUrl(),
       endpoint,
       currentState: this.connection,
@@ -170,13 +170,13 @@ class StatsClient {
     });
 
     const tcpResult = await testTcpPort(endpoint);
-    this.log(tcpResult.ok ? "info" : "error", tcpResult.ok ? "Test TCP OK: port ouvert" : "Test TCP ECHEC", tcpResult);
+    this.log(tcpResult.ok ? "info" : "error", tcpResult.ok ? "TCP test OK: port open" : "TCP test FAILED", tcpResult);
 
     const readResult = await testTcpRead(endpoint);
-    this.log(readResult.ok ? "info" : "warn", readResult.ok ? "Test TCP: donnees recues" : "Test TCP: aucune donnee recue", readResult);
+    this.log(readResult.ok ? "info" : "warn", readResult.ok ? "TCP test: data received" : "TCP test: no data received", readResult);
 
     if (tcpResult.ok && !readResult.ok) {
-      this.log("info", "Diagnostic: connexion OK. Si aucun UpdateState n'apparait, lance un match et attends le kickoff.");
+      this.log("info", "Diagnostics: connection OK. If no UpdateState appears, start a match and wait for kickoff.");
     }
   }
 }

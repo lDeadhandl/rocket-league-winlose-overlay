@@ -29,7 +29,7 @@ function createUnknownPlaylist(overrides = {}) {
   return {
     id: null,
     short: "MMR",
-    label: "Mode inconnu",
+    label: "Unknown mode",
     source: "unknown",
     confidence: "unknown",
     ...overrides

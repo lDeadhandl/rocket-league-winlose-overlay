@@ -18,8 +18,8 @@ function main() {
   const usable = candidates.filter((candidate) => candidate.allowCreate || fs.existsSync(candidate.file));
 
   if (!usable.length) {
-    console.log("Configuration Stats API: Rocket League introuvable automatiquement.");
-    console.log("Edite DefaultStatsAPI.ini manuellement si la connexion reste en connecting.");
+    console.log("Stats API configuration: could not find Rocket League automatically.");
+    console.log("Edit DefaultStatsAPI.ini manually if the connection stays in connecting.");
     return 0;
   }
 
@@ -33,29 +33,29 @@ function main() {
       configured += 1;
       if (result.changed) {
         changed += 1;
-        console.log(`Stats API configuree: ${candidate.file}`);
+        console.log(`Stats API configured: ${candidate.file}`);
         if (result.backupPath) console.log(`Backup: ${result.backupPath}`);
       } else {
-        console.log(`Stats API deja OK: ${candidate.file}`);
+        console.log(`Stats API already OK: ${candidate.file}`);
       }
     } catch (error) {
       if (error && (error.code === "EACCES" || error.code === "EPERM")) {
         denied += 1;
-        console.log(`Droits admin requis pour modifier: ${candidate.file}`);
+        console.log(`Admin rights required to modify: ${candidate.file}`);
       } else {
-        console.log(`Configuration Stats API impossible: ${candidate.file}`);
+        console.log(`Could not configure Stats API: ${candidate.file}`);
         console.log(error && error.message ? error.message : String(error));
       }
     }
   }
 
   if (!configured && denied) {
-    console.log("Relance START-WINDOWS.bat en administrateur si Rocket League est installe dans Program Files.");
+    console.log("Rerun START-WINDOWS.bat as administrator if Rocket League is installed in Program Files.");
     return 2;
   }
 
   if (changed) {
-    console.log("Ferme completement Rocket League puis relance-le pour charger la config Stats API.");
+    console.log("Fully close Rocket League and relaunch it to load the Stats API config.");
   }
 
   return 0;
