@@ -141,6 +141,7 @@ function readPositiveNumber(value, fallback) {
 }
 
 function readNumber(value, fallback) {
+  if (value === null || value === "") return fallback;
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
 }
