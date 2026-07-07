@@ -3,11 +3,12 @@ const net = require("net");
 const { JsonObjectStream } = require("./json-stream");
 
 class StatsClient {
-  constructor({ getUrl, onMessage, log, emitState }) {
+  constructor({ getUrl, onMessage, log, emitState, onConnected }) {
     this.getUrl = getUrl;
     this.onMessage = onMessage;
     this.log = log;
     this.emitState = emitState;
+    this.onConnected = onConnected;
 
     this.socket = null;
     this.reconnectTimer = null;
@@ -17,6 +18,10 @@ class StatsClient {
     this.connectionMode = "";
     this.packetCount = 0;
     this.rawStream = new JsonObjectStream();
+    // Set when a live connection drops; survives the retry loop so the next
+    // successful connect can report how long the game stayed offline.
+    this.disconnectedAt = null;
+    this.hadConnection = false;
   }
 
   status() {
@@ -75,9 +80,16 @@ class StatsClient {
       this.reconnectDelayMs = 1000;
       this.connection = "connected";
       this.connectionMode = "tcp";
+      this.hadConnection = true;
       this.log("info", "Stats API connected over TCP", endpoint);
       this.emitState();
       this.scheduleNoMessageWarning();
+
+      if (this.disconnectedAt !== null) {
+        const offlineMs = Date.now() - this.disconnectedAt;
+        this.disconnectedAt = null;
+        if (this.onConnected) this.onConnected(offlineMs);
+      }
     });
 
     socket.on("data", (chunk) => {
@@ -92,6 +104,12 @@ class StatsClient {
     socket.on("close", () => {
       if (socket !== this.socket) return;
       clearTimeout(this.noMessageTimer);
+      // Only stamp the drop of a live connection: the retry loop while the
+      // game is closed also fires "close" and must not push the time forward.
+      if (this.hadConnection) {
+        this.disconnectedAt = Date.now();
+        this.hadConnection = false;
+      }
       this.connection = "disconnected";
       this.log("warn", "Stats API TCP disconnected", { nextRetryMs: this.reconnectDelayMs });
       this.emitState();

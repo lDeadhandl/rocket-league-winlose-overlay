@@ -19,6 +19,11 @@ const MIME_TYPES = {
   ".ico": "image/x-icon"
 };
 
+// With the server running permanently (auto-start at login), the startup
+// session reset never fires; instead a fresh play session starts 0-0 when the
+// game reconnects after being offline this long.
+const SESSION_RESET_OFFLINE_MS = 30 * 60 * 1000;
+
 const appState = new AppState(paths);
 let liveServer = null;
 const activeRankRequests = new Set();
@@ -27,7 +32,14 @@ const statsClient = new StatsClient({
   getUrl: () => appState.config.statsApiUrl,
   onMessage: (raw) => appState.handleStatsMessage(raw),
   log: (level, message, details) => appState.log(level, message, details),
-  emitState: () => appState.emitState()
+  emitState: () => appState.emitState(),
+  onConnected: (offlineMs) => {
+    if (offlineMs <= SESSION_RESET_OFFLINE_MS || appState.config.keepSessionBetweenLaunches) return;
+    appState.log("info", "Session reset: Rocket League relaunched after offline period", {
+      offlineMinutes: Math.round(offlineMs / 60000)
+    });
+    appState.resetSession();
+  }
 });
 const trackerClient = new TrackerClient({
   log: (level, message, details) => appState.log(level, message, details)
