@@ -1,7 +1,14 @@
 @echo off
 setlocal
-title Install auto-start - Win/Lose Overlay
+title Auto-start toggle - Win/Lose Overlay
 cd /d "%~dp0"
+
+set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+set "VBS_PATH=%STARTUP_DIR%\RocketLeague-Overlay.vbs"
+
+if exist "%VBS_PATH%" goto uninstall
+
+rem ---------- Not installed -> install ----------
 
 where node >nul 2>nul
 if errorlevel 1 (
@@ -22,8 +29,6 @@ if not exist "node_modules\ws\package.json" (
   exit /b 1
 )
 
-set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
-set "VBS_PATH=%STARTUP_DIR%\RocketLeague-Overlay.vbs"
 set "PROJECT_DIR=%~dp0"
 if "%PROJECT_DIR:~-1%"=="\" set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
 
@@ -41,7 +46,7 @@ if not exist "%VBS_PATH%" (
 )
 
 echo.
-echo Auto-start installed:
+echo Auto-start INSTALLED:
 echo   %VBS_PATH%
 echo.
 echo The server will now start in the background (invisible)
@@ -53,10 +58,26 @@ echo.
 echo Control panel : http://localhost:5177/control.html
 echo OBS overlay   : http://localhost:5177/overlay.html
 echo.
-echo Note: if the server was already running, the new instance
-echo exits on its own (no duplicates possible).
-echo.
-echo If you ever move this folder, run INSTALL-AUTOSTART.bat again.
-echo To uninstall: UNINSTALL-AUTOSTART.bat
+echo Run this file again to uninstall.
+echo After code changes: run it twice (uninstall + install) to
+echo restart the server with the new code.
+echo If you ever move this folder, do the same to refresh the path.
 echo.
 pause
+exit /b 0
+
+:uninstall
+
+del "%VBS_PATH%"
+echo.
+echo Auto-start REMOVED.
+echo.
+echo Stopping the running server (if any)...
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 5177 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force -ErrorAction Stop; Write-Output ('Server stopped (PID ' + $_ + ').') } catch {} }"
+echo.
+echo Done. The server will no longer start automatically.
+echo Run this file again to reinstall, or use START-WINDOWS.bat
+echo to run it manually.
+echo.
+pause
+exit /b 0
