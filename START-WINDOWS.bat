@@ -8,30 +8,30 @@ if errorlevel 1 (
   where winget >nul 2>nul
   if not errorlevel 1 (
     echo.
-    echo Node.js n'est pas installe.
-    echo Installation de Node.js LTS avec winget...
+    echo Node.js is not installed.
+    echo Installing Node.js LTS with winget...
     echo.
     winget install --id OpenJS.NodeJS.LTS -e --source winget --accept-package-agreements --accept-source-agreements
     if errorlevel 1 (
       echo.
-      echo Echec installation Node.js via winget.
-      echo Installe la version LTS ici : https://nodejs.org/
-      echo Puis relance ce fichier.
+      echo Node.js installation via winget failed.
+      echo Install the LTS version from here: https://nodejs.org/
+      echo Then run this file again.
       echo.
       pause
       exit /b 1
     )
     echo.
-    echo Node.js a ete installe.
-    echo Ferme cette fenetre puis relance START-WINDOWS.bat pour charger le PATH.
+    echo Node.js has been installed.
+    echo Close this window and run START-WINDOWS.bat again to reload the PATH.
     echo.
     pause
     exit /b 0
   )
   echo.
-  echo Node.js n'est pas installe.
-  echo Installe la version LTS ici : https://nodejs.org/
-  echo Puis relance ce fichier.
+  echo Node.js is not installed.
+  echo Install the LTS version from here: https://nodejs.org/
+  echo Then run this file again.
   echo.
   pause
   exit /b 1
@@ -40,8 +40,8 @@ if errorlevel 1 (
 where npm >nul 2>nul
 if errorlevel 1 (
   echo.
-  echo npm est introuvable alors que Node.js est installe.
-  echo Reinstalle Node.js LTS en cochant l'option npm, puis relance ce fichier.
+  echo npm was not found even though Node.js is installed.
+  echo Reinstall Node.js LTS with the npm option enabled, then run this file again.
   echo https://nodejs.org/
   echo.
   pause
@@ -58,7 +58,7 @@ node -e "require('ws')" >nul 2>nul
 if errorlevel 1 set "NEED_INSTALL=1"
 
 if "%NEED_INSTALL%"=="1" (
-  echo Installation des dependances...
+  echo Installing dependencies...
   if exist package-lock.json (
     call npm ci --omit=dev
   ) else (
@@ -66,27 +66,27 @@ if "%NEED_INSTALL%"=="1" (
   )
   if errorlevel 1 (
     echo.
-    echo Echec installation des dependances.
-    echo Verifie ta connexion internet, puis relance ce fichier.
+    echo Dependency installation failed.
+    echo Check your internet connection, then run this file again.
     pause
     exit /b 1
   )
-  echo Dependances OK.
+  echo Dependencies OK.
 )
 
-echo Configuration Stats API Rocket League...
+echo Configuring the Rocket League Stats API...
 node scripts\configure-stats-api.js
 if errorlevel 2 (
   echo.
-  echo La config Stats API demande peut-etre les droits admin.
-  echo Si le panneau reste en connecting, relance START-WINDOWS.bat en administrateur.
+  echo The Stats API config may require admin rights.
+  echo If the panel stays on connecting, run START-WINDOWS.bat as administrator.
 )
 
 start "" "http://localhost:5177/control.html"
 echo.
-echo Overlay OBS lance.
-echo Panneau: http://localhost:5177/control.html
-echo OBS:     http://localhost:5177/overlay.html
+echo OBS overlay started.
+echo Panel: http://localhost:5177/control.html
+echo OBS:   http://localhost:5177/overlay.html
 echo.
 npm start
 pause

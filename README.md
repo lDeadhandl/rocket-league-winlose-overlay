@@ -1,76 +1,76 @@
 # Rocket League Win/Lose Overlay
 
-Overlay OBS pour Rocket League qui affiche le MMR, les wins, les losses et la winstreak de la session.
+OBS overlay for Rocket League that shows the session's MMR, wins, losses and winstreak.
 
-Il utilise la Stats API officielle locale de Rocket League. Il ne hook pas le jeu, n'injecte rien, et fonctionne proprement avec EAC via OBS.
+It uses Rocket League's official local Stats API. It does not hook the game, injects nothing, and works cleanly with EAC through OBS.
 
-## Apercu
+## Preview
 
-![Overlay OBS](docs/screenshots/overlay.png)
+![OBS overlay](docs/screenshots/overlay.png)
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
-## Ce que ca fait
+## What it does
 
-- Affiche une barre OBS transparente avec `MMR / WIN / LOSE / STREAK`.
-- Compte automatiquement les wins/losses quand Rocket League envoie le gagnant.
-- Compte aussi les FF/abandons quand le score final permet de deduire le resultat.
-- Recupere le MMR via Tracker.gg quand le joueur et le mode sont detectes.
-- Garde le dernier MMR affiche tant qu'un nouveau MMR valide n'est pas recu.
-- Reset les wins/losses a chaque lancement par defaut, avec option pour les garder entre sessions.
-- Fournit un dashboard local avec logs, historique et boutons de correction.
+- Shows a transparent OBS bar with `MMR / WIN / LOSE / STREAK`.
+- Automatically counts wins/losses when Rocket League sends the winner.
+- Also counts FF/forfeits when the final score allows inferring the result.
+- Fetches the MMR from Tracker.gg once the player and mode are detected.
+- Keeps the last displayed MMR until a new valid MMR is received.
+- Resets wins/losses on every launch by default, with an option to keep them between sessions.
+- Provides a local dashboard with logs, history and correction buttons.
 
-## Installation Rapide
+## Quick Install
 
-### 1. Telecharger
+### 1. Download
 
-Telecharge la derniere release :
+Download the latest release:
 
 ```txt
 https://github.com/julianout/RocketLeague-win-lose/releases/latest
 ```
 
-Prends :
+Grab:
 
 ```txt
 rocket-league-winlose-overlay-ready.zip
 ```
 
-Dezippe le dossier ou tu veux.
+Unzip the folder wherever you want.
 
-### 2. Lancer
+### 2. Run
 
-Double-clique :
+Double-click:
 
 ```txt
 START-WINDOWS.bat
 ```
 
-Le launcher s'occupe de :
+The launcher takes care of:
 
-- installer Node.js LTS avec `winget` si Node manque ;
-- verifier `npm` ;
-- installer les dependances du projet ;
-- activer la Stats API Rocket League avec backup ;
-- ouvrir le dashboard ;
-- lancer le serveur overlay.
+- installing Node.js LTS with `winget` if Node is missing;
+- checking `npm`;
+- installing the project dependencies;
+- enabling the Rocket League Stats API (with a backup);
+- opening the dashboard;
+- starting the overlay server.
 
-Si Node.js ne peut pas etre installe automatiquement, installe Node.js LTS ici, puis relance le `.bat` :
+If Node.js cannot be installed automatically, install Node.js LTS from here, then run the `.bat` again:
 
 ```txt
 https://nodejs.org/
 ```
 
-### 3. Relancer Rocket League
+### 3. Restart Rocket League
 
-Si le launcher a modifie la Stats API, ferme completement Rocket League puis relance-le.
+If the launcher changed the Stats API config, fully close Rocket League and start it again.
 
-Si ca reste en `connecting`, relance `START-WINDOWS.bat` en administrateur, puis relance Rocket League.
+If it stays on `connecting`, run `START-WINDOWS.bat` as administrator, then restart Rocket League.
 
-Config manuelle si besoin :
+Manual config if needed:
 
 ```txt
-<Dossier Rocket League>\TAGame\Config\DefaultStatsAPI.ini
+<Rocket League folder>\TAGame\Config\DefaultStatsAPI.ini
 ```
 
 ```ini
@@ -79,104 +79,112 @@ Port=49123
 PacketSendRate=30
 ```
 
-Le launcher affiche :
+The launcher prints:
 
 ```txt
-Panneau: http://localhost:5177/control.html
-OBS:     http://localhost:5177/overlay.html
+Panel: http://localhost:5177/control.html
+OBS:   http://localhost:5177/overlay.html
 ```
 
-Garde cette fenetre ouverte pendant que tu joues.
+Keep that window open while you play.
 
-### 4. Ajouter OBS
+### 4. Add to OBS
 
-Ajoute une `Browser Source` avec :
+Add a `Browser Source` with:
 
 ```txt
 http://localhost:5177/overlay.html
 ```
 
-Reglages conseilles :
+Recommended settings:
 
 ```txt
 Width: 1920
 Height: 1080
-Custom CSS: vide
+Custom CSS: empty
 ```
 
-Pas besoin de CSS perso. Si OBS garde un ancien rendu, clique `Refresh cache of current page`.
+No custom CSS needed. If OBS keeps an old render, click `Refresh cache of current page`.
 
-## Version BakkesMod
+## Auto-start (optional)
 
-Ce projet n'est pas un plugin BakkesMod natif. Le zip de release GitHub contient le launcher Windows complet avec `.bat`.
+Run `AUTOSTART.bat` once to make the server start hidden at every Windows login — no console window, nothing to launch before playing. Run it again to turn auto-start off (it also stops the running server).
 
-Pour publier sur le site BakkesMod, il faut utiliser un zip separe sans `.bat`, `.exe`, `.dll`, `.sh` ni fichiers interdits. Ce zip n'est pas attache a la release GitHub.
+After changing the code, run it twice (off + on) to restart the server with the new code.
+
+With an always-on server, the session counter auto-resets when Rocket League reconnects after being offline for 30+ minutes, so every play session still starts at 0-0 (unless `Keep win / lose between sessions` is enabled).
+
+## BakkesMod Version
+
+This project is not a native BakkesMod plugin. The GitHub release zip contains the full Windows launcher with `.bat` files.
+
+Publishing on the BakkesMod site requires a separate zip without `.bat`, `.exe`, `.dll`, `.sh` or other forbidden files. That zip is not attached to the GitHub release.
 
 ## Dashboard
 
-Ouvre :
+Open:
 
 ```txt
 http://localhost:5177/control.html
 ```
 
-En usage normal, tu n'as rien a regler. Le dashboard sert surtout a verifier :
+In normal use you don't have to configure anything. The dashboard is mostly there to check:
 
-- connexion Stats API ;
-- joueur detecte ;
-- equipe detectee ;
-- score live ;
-- mode MMR ;
-- MMR Tracker ;
-- historique de session ;
-- logs utiles.
+- Stats API connection;
+- detected player;
+- detected team;
+- live score;
+- MMR mode;
+- Tracker MMR;
+- session history;
+- useful logs.
 
-La partie `Depannage manuel` reste repliee. Elle sert seulement si l'auto-detection echoue ou si tu veux corriger un resultat.
+The `Manual troubleshooting` section stays collapsed. It is only needed if auto-detection fails or if you want to correct a result.
 
-Par defaut, les wins/losses repartent a zero quand tu relances l'overlay. Dans `Depannage manuel`, coche `Garder win / lose entre sessions` puis `Sauver` si tu veux conserver la session entre deux lancements.
+By default, wins/losses go back to zero when you restart the overlay. In `Manual troubleshooting`, tick `Keep win / lose between sessions` then `Save` if you want to keep the session across launches.
 
 ## MMR
 
-La Stats API officielle ne donne pas le MMR. L'app utilise donc Tracker.gg a partir du joueur detecte par Rocket League.
+The official Stats API does not provide the MMR. The app therefore uses Tracker.gg based on the player detected by Rocket League.
 
-Detection du mode :
+Mode detection:
 
-- si Rocket League envoie un champ playlist/mode, l'app l'utilise ;
-- sinon l'app deduit le mode avec le nombre de joueurs : 1v1, 2v2, 3v3, 4v4 ;
-- si l'auto se trompe, force le mode dans `Depannage manuel`.
+- if Rocket League sends a playlist/mode field, the app uses it;
+- otherwise the app infers the mode from the player count: 1v1, 2v2, 3v3, 4v4;
+- if auto-detection gets it wrong, force the mode in `Manual troubleshooting`.
 
-Tracker.gg peut avoir du delai ou refuser temporairement certaines requetes. Dans ce cas, le win/loss continue de marcher.
+Tracker.gg can lag behind or temporarily reject some requests. When that happens, win/loss counting keeps working.
 
-## Logs Utiles
+## Useful Logs
 
-Messages importants dans le dashboard :
+Important messages in the dashboard:
 
-- `Stats API connectee en TCP` : l'app est connectee au port Rocket League.
-- `Match state` : Rocket League envoie bien des donnees.
-- `Joueur detecte` : l'app sait quelle equipe compter.
-- `Mode MMR detecte` : l'app sait quel mode utiliser pour le MMR.
-- `MMR Tracker recu` : le MMR a ete recu.
-- `Resultat WIN/LOSE enregistre` : le match a ete compte.
-- `Resultat deduit sur MatchDestroyed` : FF/abandon compte depuis le score final connu.
+- `Stats API connected over TCP`: the app is connected to the Rocket League port.
+- `Match state`: Rocket League is sending data.
+- `Player detected`: the app knows which team to count.
+- `MMR mode detected`: the app knows which mode to use for the MMR.
+- `Tracker MMR received`: the MMR was received.
+- `WIN result recorded` / `LOSE result recorded`: the match was counted.
+- `Result inferred from MatchDestroyed`: FF/forfeit counted from the last known score.
 
-Si ca reste en `connecting`, ouvre `Depannage manuel`, puis clique `Test connexion`.
-Si le test TCP echoue, ferme Rocket League et relance `START-WINDOWS.bat` en administrateur pour laisser le launcher modifier `DefaultStatsAPI.ini`.
+If it stays on `connecting`, open `Manual troubleshooting`, then click `Test connection`.
+If the TCP test fails, close Rocket League and run `START-WINDOWS.bat` as administrator so the launcher can update `DefaultStatsAPI.ini`.
 
 ## OBS Options
 
-Cacher la barre permanente :
+Hide the permanent bar:
 
 ```txt
 http://localhost:5177/overlay.html?hud=0
 ```
 
-Changer la duree du toast WIN/LOSE :
+Change the WIN/LOSE toast duration:
 
 ```txt
 http://localhost:5177/overlay.html?duration=9000
 ```
 
-Mode demo pour verifier le rendu :
+Demo mode to check the rendering:
 
 ```txt
 http://localhost:5177/overlay.html?demo=1&preview=1
@@ -185,9 +193,9 @@ http://localhost:5177/control.html?demo=1
 
 ## Notes
 
-Un overlay au-dessus du plein ecran exclusif Rocket League n'est pas fiable sans hook/injection. Avec EAC, l'approche propre est OBS Browser Source.
+An overlay on top of Rocket League's exclusive fullscreen is not reliable without hooking/injection. With EAC, the clean approach is an OBS Browser Source.
 
-Les fichiers locaux suivants ne sont pas commit :
+The following local files are not committed:
 
 - `config.json`
 - `data/session.json`

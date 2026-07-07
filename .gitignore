@@ -1,8 +1,6 @@
 node_modules/
 data/
 config.json
-LANCER.js
-A-LIRE-BAKKESMOD.txt
 *.zip
 npm-debug.log*
 .env
