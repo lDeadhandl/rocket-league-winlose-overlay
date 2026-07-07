@@ -106,74 +106,84 @@ button.compact {
 .result-toast {
   position: absolute;
   right: 18px;
+  background: transparent !important;
 }
 
-/* RocketStats-style session strip (display: grid is set inline by overlay.js) */
 .rocket-strip {
-  top: 16px;
-  grid-auto-flow: column;
+  top: 14px;
+  display: grid;
   align-items: center;
-  gap: 13px;
-  height: 40px;
-  padding: 0 20px 0 17px;
-  border-radius: 999px;
+  grid-template-columns: 86px 1px 46px 1px 46px 1px 54px;
+  column-gap: 6px;
+  width: 312px;
+  height: 44px;
+  padding: 7px 20px 6px 15px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
   color: #ffffff;
-  background:
-    radial-gradient(55% 260% at 100% 50%, rgba(255, 122, 26, 0.95), rgba(255, 122, 26, 0) 72%),
-    linear-gradient(180deg, rgba(38, 30, 26, 0.97), rgba(16, 12, 10, 0.97));
-  border: 1px solid rgba(255, 255, 255, 0.055);
-  box-shadow:
-    0 10px 26px rgba(0, 0, 0, 0.45),
-    14px 0 34px -10px rgba(255, 122, 26, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  font-family: Bahnschrift, "Segoe UI", "Arial Narrow", Arial, sans-serif;
-  font-variant-numeric: tabular-nums;
+  background: url("/assets/rocketstats-strip.svg") center / 100% 100% no-repeat !important;
+  box-shadow: none;
+  font-family: Bahnschrift, "Arial Narrow", Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  font-stretch: condensed;
+  font-weight: 800;
   line-height: 1;
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.92);
+}
+
+.rocket-strip::after {
+  content: none;
 }
 
 .strip-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  justify-content: flex-start;
+  min-width: 0;
   white-space: nowrap;
-  font-size: 20px;
-  font-weight: 800;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.strip-item.win,
+.strip-item.loss,
+.strip-item.streak {
+  justify-content: center;
+}
+
+.strip-item.streak {
+  justify-content: flex-start;
+}
+
+.strip-item.mmr {
+  gap: 7px;
+  justify-content: center;
+}
+
+.mmr-mode {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 950;
 }
 
 .strip-separator {
   width: 1px;
   height: 16px;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.mmr-mode {
-  margin-right: 2px;
-  color: #ff8b1f;
-  font-size: 11px;
-  font-style: italic;
-  font-weight: 850;
-  letter-spacing: 1.3px;
-}
-
-#streakRow.loss #hudStreak {
-  color: #ff7a86;
-}
-
-#streakRow.neutral .flame-icon {
-  opacity: 0.4;
-}
-
-.is-hidden {
-  display: none !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
 }
 
 .strip-icon {
   flex: 0 0 auto;
-  width: 21px;
-  height: 21px;
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   shape-rendering: geometricPrecision;
 }
 
@@ -183,15 +193,15 @@ button.compact {
 }
 
 .x-icon {
-  width: 19px;
-  height: 19px;
+  width: 17px;
+  height: 17px;
   fill: #ff443f;
   stroke: none;
 }
 
 .flame-icon {
-  width: 18px;
-  height: 21px;
+  width: 15px;
+  height: 18px;
   fill: none;
   stroke: none;
 }
@@ -222,7 +232,7 @@ button.compact {
 }
 
 .result-toast {
-  top: 68px;
+  top: 58px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -246,7 +256,7 @@ button.compact {
 }
 
 .overlay-page.hud-hidden .result-toast {
-  top: 16px;
+  top: 14px;
 }
 
 .result-toast.is-hidden {
@@ -729,21 +739,21 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .mnk-panel,
+  .rocket-strip,
   .result-toast {
     right: 14px;
   }
 
-  .mnk-panel {
+  .rocket-strip {
     top: 14px;
   }
 
   .result-toast {
-    top: 106px;
+    top: 58px;
   }
 
   .overlay-page.hud-hidden .result-toast {
-    top: 16px;
+    top: 14px;
   }
 }
 
