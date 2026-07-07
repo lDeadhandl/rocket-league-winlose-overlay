@@ -3,7 +3,9 @@ const { execFile } = require("child_process");
 const { getPlaylist } = require("./playlist");
 
 const PROFILE_TTL_MS = 5 * 60 * 1000;
-const ERROR_TTL_MS = 60 * 1000;
+// Kept short: Cloudflare 403s are transient, and a longer TTL replays the
+// failure into unrelated lookups for the same target (e.g. a lobby refresh).
+const ERROR_TTL_MS = 15 * 1000;
 
 class TrackerClient {
   constructor({ log }) {
@@ -105,6 +107,7 @@ class TrackerClient {
         tier: "",
         division: "",
         error: error && error.message ? error.message : String(error),
+        statusCode: error && typeof error.statusCode === "number" ? error.statusCode : null,
         updatedAt: new Date().toISOString()
       };
     }

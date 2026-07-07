@@ -55,6 +55,10 @@ const lobby = {
 let lobbySignature = "";
 let lobbyRefreshTimer = null;
 let lobbyFetchInFlight = false;
+let lobbyRankRetryTimer = null;
+
+const LOBBY_RANK_MAX_ATTEMPTS = 3;
+const LOBBY_RANK_RETRY_DELAYS_MS = [10000, 25000];
 
 appState.setStatsStatusProvider(() => statsClient.status());
 appState.on("state", () => scheduleLobbyRefresh());
@@ -293,6 +297,8 @@ async function maybeRefreshLobby() {
   if (matchChanged || playlistChanged) {
     lobby.players = [];
     lobby.updatedAt = null;
+    clearTimeout(lobbyRankRetryTimer);
+    lobbyRankRetryTimer = null;
   }
 
   if (matchGuid) lobby.matchGuid = matchGuid;
@@ -359,10 +365,13 @@ async function fetchPendingLobbyRanks() {
       const entry = lobby.players.find((candidate) => candidate.rank && candidate.rank.status === "loading");
       if (!entry) break;
 
+      entry.rankAttempts = (entry.rankAttempts || 0) + 1;
       entry.rank = await trackerClient.getPlaylistRank({
         primaryId: entry.primaryId,
         playerName: entry.name,
-        playlistId: lobby.playlistId
+        playlistId: lobby.playlistId,
+        // On retries, skip the cached error so we actually hit the network.
+        forceRefresh: entry.rankAttempts > 1
       });
 
       broadcast("lobby", lobby);
@@ -371,9 +380,51 @@ async function fetchPendingLobbyRanks() {
 
     lobby.updatedAt = new Date().toISOString();
     broadcast("lobby", lobby);
+    scheduleLobbyRankRetry();
   } finally {
     lobbyFetchInFlight = false;
   }
+}
+
+// Transient tracker failures (Cloudflare 403, timeout) would otherwise pin a
+// player at "--" for the whole match, since the drain loop above only picks up
+// "loading" entries. Re-queue those a couple of times with a delay.
+function isRetryableRank(rank) {
+  if (!rank || rank.status !== "error") return false;
+  if (typeof rank.statusCode === "number") {
+    return rank.statusCode === 403 || rank.statusCode === 429 || rank.statusCode >= 500;
+  }
+  return /timeout|curl error|unreadable response/i.test(String(rank.error || ""));
+}
+
+function scheduleLobbyRankRetry() {
+  if (lobbyRankRetryTimer) return;
+
+  const pending = lobby.players.filter(
+    (entry) => isRetryableRank(entry.rank) && (entry.rankAttempts || 0) < LOBBY_RANK_MAX_ATTEMPTS
+  );
+  if (!pending.length) return;
+
+  const attempts = Math.max(...pending.map((entry) => entry.rankAttempts || 1));
+  const delay = LOBBY_RANK_RETRY_DELAYS_MS[Math.min(attempts - 1, LOBBY_RANK_RETRY_DELAYS_MS.length - 1)];
+
+  appState.log("info", "Lobby rank retry scheduled", {
+    players: pending.map((entry) => entry.name),
+    delayMs: delay
+  });
+
+  lobbyRankRetryTimer = setTimeout(() => {
+    lobbyRankRetryTimer = null;
+    // Re-check at fire time: the lobby may have reset or filled in meanwhile.
+    let queued = 0;
+    for (const entry of lobby.players) {
+      if (isRetryableRank(entry.rank) && (entry.rankAttempts || 0) < LOBBY_RANK_MAX_ATTEMPTS) {
+        entry.rank = { status: "loading" };
+        queued += 1;
+      }
+    }
+    if (queued) fetchPendingLobbyRanks();
+  }, delay);
 }
 
 function buildTrackerUrl(player) {
