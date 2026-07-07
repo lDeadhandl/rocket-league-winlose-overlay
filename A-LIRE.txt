@@ -1,0 +1,58 @@
+ROCKET LEAGUE WIN/LOSE OVERLAY
+
+1. Lance :
+   START-WINDOWS.bat
+
+   Si Node.js manque, le .bat tente de l'installer tout seul avec winget.
+   npm vient avec Node.js, puis les dependances du projet s'installent seules.
+   Le .bat configure aussi la Stats API Rocket League automatiquement avec backup.
+   Si winget n'est pas disponible, installe Node.js LTS ici :
+   https://nodejs.org/
+
+2. Dans le panneau qui s'ouvre :
+   - ne regle rien en usage normal
+   - regarde juste Statut live / Session / Diagnostic
+   - ouvre "Depannage manuel" seulement si l'auto-detection echoue
+   - utilise "Test connexion" si ca reste en connecting
+
+3. Dans OBS, ajoute une Browser Source :
+   http://localhost:5177/overlay.html
+
+   Largeur 1920, hauteur 1080. Pas besoin de CSS perso.
+   Si tu vois encore du noir, clique "Refresh cache of current page" dans la source OBS.
+
+4. Le .bat tente d'activer la Stats API tout seul dans :
+   <Install Dir>\TAGame\Config\DefaultStatsAPI.ini
+
+   Si ca reste en connecting, ferme Rocket League, relance START-WINDOWS.bat
+   en administrateur, puis relance Rocket League.
+
+   PacketSendRate=30
+   Port=49123
+
+Garde la fenetre noire ouverte pendant que tu joues.
+
+OBS
+
+L'overlay affiche une petite barre MMR / WIN / LOSE / WINSTREAK en haut a droite.
+Par defaut, les wins/losses repartent a zero quand tu relances l'overlay.
+Dans "Depannage manuel", coche "Garder win / lose entre sessions" puis "Sauver"
+si tu veux les garder entre deux lancements.
+Le MMR vient de Tracker.gg. Si le mode auto se trompe, ouvre "Depannage manuel"
+et force le mode MMR.
+La barre utilise une image SVG transparente integree, donc tu gardes juste le lien OBS.
+Un overlay externe au-dessus du plein ecran exclusif n'est pas fiable sans hook/injection, donc on reste sur OBS pour garder une approche propre avec EAC.
+
+LOGS UTILES
+
+ECONNREFUSED 127.0.0.1:49123 = Rocket League ne fournit pas la Stats API.
+Match state = la connexion au jeu marche.
+Score update = les scores Blue/Orange sont lus correctement.
+Joueur detecte = l'overlay sait quelle equipe compter.
+Aucun joueur ne correspond = corrige ton pseudo dans le panneau.
+Resultat deduit sur MatchDestroyed = FF/abandon compte depuis le score connu.
+
+DIAGNOSTIC
+
+Si ca reste sur connecting, ferme Rocket League, relance-le, puis utilise "Test connexion"
+dans le panneau. Si le test TCP echoue sur 49123, Rocket League n'a pas charge la Stats API.

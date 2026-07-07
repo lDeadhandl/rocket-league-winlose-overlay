@@ -1,0 +1,11 @@
+{
+  "statsApiUrl": "tcp://127.0.0.1:49123",
+  "serverPort": 5177,
+  "playerName": "",
+  "primaryId": "",
+  "manualTeamNum": null,
+  "rankEnabled": true,
+  "rankPlaylistId": "auto",
+  "keepSessionBetweenLaunches": false,
+  "overlayDurationMs": 6500
+}
