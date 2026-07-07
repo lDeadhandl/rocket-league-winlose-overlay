@@ -200,7 +200,8 @@ async function fetchRank(request) {
     const rank = await trackerClient.getPlaylistRank({
       primaryId: request.primaryId,
       playerName: request.playerName,
-      playlistId: request.playlist.id
+      playlistId: request.playlist.id,
+      forceRefresh: Boolean(request.forceRefresh)
     });
     const applied = appState.applyRankResult(request.signature, rank);
     if (applied) {

@@ -11,7 +11,7 @@ class TrackerClient {
     this.profileCache = new Map();
   }
 
-  async getPlaylistRank({ primaryId, playerName, playlistId }) {
+  async getPlaylistRank({ primaryId, playerName, playlistId, forceRefresh = false }) {
     const playlist = getPlaylist(playlistId);
     const profileTarget = parsePrimaryId(primaryId, playerName);
 
@@ -38,7 +38,7 @@ class TrackerClient {
         fallbackTarget: profileTarget.fallbackTarget || null,
         expectedPlatformUserId: profileTarget.expectedPlatformUserId || null
       });
-      const profile = await this.getProfile(profileTarget);
+      const profile = await this.getProfile(profileTarget, { forceRefresh });
       const rank = profile.playlists[playlist.id];
 
       if (!rank) {
@@ -110,12 +110,14 @@ class TrackerClient {
     }
   }
 
-  async getProfile(profileTarget) {
+  async getProfile(profileTarget, { forceRefresh = false } = {}) {
     const key = `${profileTarget.slug}:${profileTarget.target}`;
     const cached = this.profileCache.get(key);
     const now = Date.now();
 
-    if (cached && cached.expiresAt > now) {
+    // forceRefresh bypasses cached values/errors but still reuses an in-flight
+    // request to avoid duplicate concurrent hits on the tracker API.
+    if (cached && cached.expiresAt > now && (!forceRefresh || cached.promise)) {
       this.log("info", "Tracker cache utilise", {
         platform: profileTarget.slug,
         targetSource: profileTarget.targetSource,

@@ -30,6 +30,10 @@ const DEFAULT_CONFIG = {
   keepSessionBetweenLaunches: false
 };
 
+// After a match result, tracker.gg needs a moment to ingest the new rating.
+// Retry a few times with the profile cache bypassed; stop once the rating moves.
+const RANK_REFRESH_DELAYS_MS = [10000, 30000, 75000];
+
 const DEFAULT_SESSION = {
   wins: 0,
   losses: 0,
@@ -110,6 +114,8 @@ class AppState extends EventEmitter {
     this.lastLiveStateSignature = "";
     this.missingPlayerConfigLogged = false;
     this.playerNotFoundLogged = false;
+    this.rankRefreshTimers = [];
+    this.rankRatingBeforeRefresh = null;
 
     if (!this.config.keepSessionBetweenLaunches) {
       this.log("info", "Session reset au lancement", {
@@ -221,6 +227,7 @@ class AppState extends EventEmitter {
 
   resetRankState() {
     this.lastRankRequestKey = "";
+    this.clearRankRefreshTimers();
     this.latestState.rank = createEmptyRankState();
   }
 
@@ -585,6 +592,39 @@ class AppState extends EventEmitter {
     });
   }
 
+  scheduleRankRefresh() {
+    this.clearRankRefreshTimers();
+    if (!this.config.rankEnabled) return;
+
+    this.rankRatingBeforeRefresh = this.latestState.rank ? this.latestState.rank.rating : null;
+    this.rankRefreshTimers = RANK_REFRESH_DELAYS_MS.map((delayMs) =>
+      setTimeout(() => this.queueRankRefresh(), delayMs)
+    );
+  }
+
+  clearRankRefreshTimers() {
+    for (const timer of this.rankRefreshTimers || []) clearTimeout(timer);
+    this.rankRefreshTimers = [];
+  }
+
+  queueRankRefresh() {
+    const primaryId = this.latestState.playerPrimaryId;
+    const playlist = this.latestState.playlist;
+    if (!this.config.rankEnabled || !primaryId || !playlist || playlist.id === null || playlist.id === undefined) return;
+
+    const signature = this.getRankSignature(primaryId, playlist.id);
+    if (!signature) return;
+
+    this.emit("rankLookup", {
+      requestKey: `refresh|${signature}|${Date.now()}`,
+      signature,
+      primaryId,
+      playerName: this.latestState.playerName,
+      playlist,
+      forceRefresh: true
+    });
+  }
+
   applyRankResult(signature, rank) {
     if (!signature || !this.latestState.rank || this.latestState.rank.signature !== signature) return false;
 
@@ -593,6 +633,14 @@ class AppState extends EventEmitter {
       ...rank,
       signature
     };
+
+    const ratingMoved = rank.status === "ready" &&
+      rank.rating !== null && rank.rating !== undefined &&
+      rank.rating !== this.rankRatingBeforeRefresh;
+    if (this.rankRefreshTimers.length && ratingMoved) {
+      this.clearRankRefreshTimers();
+    }
+
     this.emitState();
     return true;
   }
@@ -823,6 +871,7 @@ class AppState extends EventEmitter {
       latestState: this.latestState,
       durationMs: this.config.overlayDurationMs
     });
+    if (!sourceData.Preview) this.scheduleRankRefresh();
     this.emitState();
   }
 
